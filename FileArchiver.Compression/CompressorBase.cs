@@ -7,13 +7,13 @@ namespace FileArchiver.Compression
 {
 	public abstract class CompressorBase
 	{
+		private static readonly int Threads = Environment.ProcessorCount;
 		protected int BlockSize;
 		private bool _cancelled;
-		private static readonly int Threads = Environment.ProcessorCount;
+		private ConcurrentQueue<Exception> _exceptions = new ConcurrentQueue<Exception>();
 		private readonly ManualResetEvent _saveEvent = new ManualResetEvent(false);
 		private readonly ManualResetEvent _readEvent = new ManualResetEvent(false);
 		private readonly ManualResetEvent[] _processEvents = new ManualResetEvent[Threads];
-		private readonly ConcurrentQueue<Exception> _exceptions = new ConcurrentQueue<Exception>();
 		private readonly BlockManager _reader = new BlockManager();
 		private readonly BlockManager _writer = new BlockManager();
 
@@ -28,6 +28,7 @@ namespace FileArchiver.Compression
 
 		public void Do(string inputFile, string outputFile)
 		{
+			_exceptions = new ConcurrentQueue<Exception>();
 			using (var readFileStream = new FileStream(inputFile, FileMode.Open))
 			using (var writeFileStream = new FileStream(outputFile, FileMode.Create))
 			{
